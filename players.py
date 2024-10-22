@@ -75,20 +75,34 @@ class HumanPlayer(BasePlayer):
 
 
 class ComputerPlayer(BasePlayer):
+
+    gambler = {
+        'Random': 0.5,
+        'Lucky': 0.45,
+        'Gambler': 0.6,
+        'SteadyHand': 0.4,
+        'TheStableGuy': 0.3
+    }
+
     def __init__(self, name, number_of_dices, total_dices):
         super().__init__(name, number_of_dices, total_dices)
-        self.gambler_threshold = 0.3
+        self.gambler_threshold = self.gambler[name]
         self.is_computer = True
 
     def generate_combinations(self, bid):
-        # extract the current bid values
+        # Extract the current bid values
         bid_quantity, bid_face = self.extract_quantity_face(bid)
 
-        faces = [x for x in range(bid_face, 7)]
-        quantities = [x for x in range(bid_quantity, bid.total_dices + 1)]
+        # For higher faces than current, all possible counts are valid
+        bigger_faces = [x for x in range(bid_face + 1, 7)]
+        all_quantities = [x for x in range(1, bid.total_dices + 1)]
+        combinations = list(itertools.product(all_quantities, bigger_faces))
 
-        combinations = list(itertools.product(quantities, faces))
-        combinations.remove((bid_quantity, bid_face))
+        # For the same face, only larger
+        same_face = [bid_face]
+        larger_quantities = [x for x in range(bid_quantity + 1, bid.total_dices + 1)]
+        combinations += list(itertools.product(larger_quantities, same_face))
+
 
         return combinations
 
@@ -115,15 +129,18 @@ class ComputerPlayer(BasePlayer):
             # generate combinations -> possible combination are face + 1, quantity + 1, face & quantity + 1
             combinations = self.generate_combinations(bid)
 
-            # implement selection of combinations
-            combinations = combinations[:9]
-
             # calculate probabs
             result_proba = self.generate_probabilities(combinations)
 
-            # select calculation
-            quantity, face = sorted(result_proba, key=lambda x: x[0], reverse=True)[0][1]
+            # select calculation bss model
+            for _ in range(100):
+                choice = random.choice(result_proba)
+                if choice[0] > 1 - self.gambler_threshold:
+                    quantity, face = choice[1]
+                    return self.place_bid(bid, quantity, face)
 
+            # if not suitable choice, then take the higher
+            quantity, face = sorted(result_proba, key=lambda x: x[0], reverse=True)[0][1]
             return self.place_bid(bid, quantity, face)
 
         else:

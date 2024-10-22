@@ -69,8 +69,15 @@ class Bid:
             if int(face) not in range(1, 7):
                 raise ValueError("Face must be between 1 and 6.")
 
-            if count <= self.last_bid['count'] and face <= self.last_bid['face']:
+            # The player can bid a higher count of the same face or any count of a higher face
+            if face < self.last_bid['face']:
+                # If the face is lower
                 raise ValueError('Please place a proper bid.')
+
+            elif face == self.last_bid['face']:
+                # The count is higher than last
+                if count <= self.last_bid['count']:
+                    raise ValueError('Please place a proper bid.')
 
         except ValueError as v:
             print(v)

@@ -7,7 +7,7 @@ from players import ComputerPlayer, HumanPlayer
 
 
 class Game:
-    available_computer_players_names = ['Random', 'Lucky', 'Gambler']
+    available_computer_players_names = ['Random', 'Lucky', 'Gambler', 'SteadyHand', 'TheStableGuy']
     turn = 0
 
     def __init__(self):
@@ -71,7 +71,7 @@ class Game:
             total_dices=self.dices * self.initial_players_count) for comp in players]
 
     def end_turn(self, bid, current_player, challenged_player):
-        # TODO reveal all dice
+        # reveal all dices
         all_dice = []
         for player in self.players:
             print(f"{player.name} has {player.cup.hand}")
@@ -118,6 +118,15 @@ class Game:
                 if not current_player.is_playing:
                     self.players.popleft()
                     current_player = self.players[0]
+
+                # check for winner
+                if len(self.players) == 1:
+                    print(f'The Winner is ---{current_player.name}---')
+                    user_input = input('Another game? (y/n): ')
+                    if user_input.lower() == 'y':
+                        self.play()
+                    else:
+                        raise SystemExit
 
                 result = current_player.take_turn(bid)
                 if result:
