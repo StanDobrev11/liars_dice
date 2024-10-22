@@ -3,10 +3,25 @@ import random
 import time
 from abc import ABC, abstractmethod
 
-from attrs import Cup, Dice, Bid
+from items import Cup, Dice, Bid
 
 
 class BasePlayer(ABC):
+    """
+    A base class for all players (human and computer) in the game of Liar's Dice.
+
+    Attributes:
+    - total_dices (int): Total number of dice in the game.
+    - is_wild (bool): Flag indicating if the game is in wild mode (1's are wild).
+
+    Methods:
+    - decide(bid): Abstract method to make a decision for the player's turn.
+    - place_bid(bid, count, face): Place a valid bid for the player.
+    - challenge(): Static method to challenge the current bid by calling 'Liar!'.
+    - take_turn(bid): Handles the player's turn, either placing a bid or challenging.
+    - win(): Declares the player as the winner of the round.
+    - lose(bid): Handles the player losing a round and losing a die.
+    """
     total_dices = None
     is_wild = False
 
@@ -55,14 +70,20 @@ class BasePlayer(ABC):
 
 
 class HumanPlayer(BasePlayer):
+    """
+    A class representing a human player in the game of Liar's Dice.
+
+    Methods:
+    - decide(bid): Prompts the user to make a decision to place a bid or call 'Liar!'.
+    """
 
     def decide(self, bid):
         while True:
             choice = input(
                 f"Make yer choice, ye salty sea dog! Yer hand be: {self.cup.hand}\nWill ye place a bet (1) or call ‘em a liar (2)? What’ll it be? ")
             if choice == '1':
-                quantity = input('How many o’ yer dice show the same face? Enter the quantity, ye sea dog: ')
-                face = input('What be the value o’ the face ye be biddin\' on? Speak up, ye bilge rat: ')
+                quantity = input("How many o’ yer dice show the same face? Enter the quantity, ye sea dog: ")
+                face = input("What be the value o’ the face ye be biddin' on? Speak up, ye bilge rat: ")
                 try:
                     result = self.place_bid(bid, count=int(quantity), face=int(face))
                 except ValueError:
@@ -79,6 +100,20 @@ class HumanPlayer(BasePlayer):
 
 
 class ComputerPlayer(BasePlayer):
+    """
+    A class representing a computer player in the game of Liar's Dice.
+
+    Attributes:
+    - gambler (dict): A dictionary containing different player types and their gamble thresholds.
+
+    Methods:
+    - generate_combinations(bid): Generates all possible bid combinations.
+    - new_bid_count_and_face(): Generates a new bid with a random count and face.
+    - decide(bid): Makes a decision to place a bid or call 'Liar!' based on probability.
+    - generate_probabilities(combinations): Calculates probabilities for each bid combination.
+    - extract_quantity_face(*args): Extracts the count and face from a bid or arguments.
+    - calculate_bid_proba(quantity, face, sim=10000): Calculates the probability of a successful bid.
+    """
     gambler = {
         "Cap'n Scattershot": 0.5,
         "One-Eyed Fortune": 0.45,
@@ -93,15 +128,15 @@ class ComputerPlayer(BasePlayer):
         self.is_computer = True
 
     def generate_combinations(self, bid):
-        # Extract the current bid values
+        # extract the current bid values
         bid_quantity, bid_face = self.extract_quantity_face(bid)
 
-        # For higher faces than current, all possible counts are valid
+        # for higher faces than current, all possible counts are valid
         bigger_faces = [x for x in range(bid_face + 1, 7)]
         all_quantities = [x for x in range(1, bid.total_dices + 1)]
         combinations = list(itertools.product(all_quantities, bigger_faces))
 
-        # For the same face, only larger
+        # for the same face, only larger
         same_face = [bid_face]
         larger_quantities = [x for x in range(bid_quantity + 1, bid.total_dices + 1)]
         combinations += list(itertools.product(larger_quantities, same_face))
@@ -135,10 +170,15 @@ class ComputerPlayer(BasePlayer):
 
         proba = self.calculate_bid_proba(quantity, face)
 
+        # the bid is probable so place a bid
         if proba > self.gambler_threshold:
-            # the bid is probable so place a bid
-            # generate combinations -> possible combination are face + 1, quantity + 1, face & quantity + 1
+
+            # generate combinations
             combinations = self.generate_combinations(bid)
+
+            # if no combinations left, challenge the player
+            if not combinations:
+                return self.challenge()
 
             # calculate probabs
             result_proba = self.generate_probabilities(combinations)
@@ -150,11 +190,12 @@ class ComputerPlayer(BasePlayer):
                     quantity, face = choice[1]
                     return self.place_bid(bid, quantity, face)
 
-            # if not suitable choice, then take the higher
+            # if not suitable choice, then take the higher prob combination
             quantity, face = sorted(result_proba, key=lambda x: x[0], reverse=True)[0][1]
             return self.place_bid(bid, quantity, face)
 
         else:
+            # the bit is not probable so challenge last player
             return self.challenge()
 
     def generate_probabilities(self, combinations):
@@ -181,6 +222,7 @@ class ComputerPlayer(BasePlayer):
 
         # extract the number of faces in the current player's cup
         face_in_cup = self.cup.hand.count(face)
+
         # add ones to calculate proba
         if self.is_wild and face != 1:
             face_in_cup += self.cup.hand.count(1)
@@ -209,9 +251,3 @@ class ComputerPlayer(BasePlayer):
                 valid_bid_count += 1
 
         return valid_bid_count / sim
-
-
-if __name__ == '__main__':
-    player = HumanPlayer('Stan', 5, 15)
-    bid = Bid(15)
-    player.decide(bid)

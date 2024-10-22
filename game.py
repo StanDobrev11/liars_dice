@@ -2,11 +2,54 @@ import random
 import time
 from collections import deque
 
-from attrs import Bid
+from items import Bid
 from players import ComputerPlayer, HumanPlayer, BasePlayer
 
 
 class Game:
+    """
+    This class represents the game of Liar's Dice.
+
+    Attributes:
+    - turn (int): Keeps track of the number of turns.
+    - available_computer_players_names (list): Predefined list of pirate-themed computer player names.
+    - initial_players_count (int): The number of players in the game.
+    - dices (int): The number of dice each player has.
+    - players (deque): A deque containing all the players (human and computer).
+    - is_wild (bool): Flag indicating if the game is in wild mode.
+
+    Methods:
+    --------
+    set_dice_count():
+        Prompts the user to set the number of dice for each player (between 2 and 5).
+
+    set_players_count():
+        Prompts the user to set the number of players for the game (between 2 and 6).
+
+    initialize():
+        Initializes the game settings, asking the user to choose the game mode (regular or wild),
+        set the number of players, and the number of dice.
+
+    generate_players():
+        Adds players (human and computer) to the game based on the player count.
+
+    generate_computer_players():
+        Generates the required number of computer players with random pirate names.
+
+        Returns:
+        - list: A list of ComputerPlayer objects.
+
+    end_turn(bid, current_player, challenged_player):
+        Resolves the end of a turn, revealing dice, checking bids, and updating game state.
+
+        Parameters:
+        - bid (Bid): The current bid in the game.
+        - current_player (BasePlayer): The player who placed the last bid.
+        - challenged_player (BasePlayer): The player who challenged the bid.
+
+    play():
+        Starts the game loop where players take turns, challenge bids, and win or lose until one winner remains.
+    """
 
     turn = 0
     available_computer_players_names = [
@@ -28,7 +71,7 @@ class Game:
             number_of_dices = input(
                 "How many bones be ye rattlin’, ye swashbuckler? Choose yer dice and let’s get rollin'! (2 - 5): ")
             try:
-                if int(number_of_dices) not in range(2, 7):
+                if int(number_of_dices) not in range(2, 6):
                     raise ValueError
                 self.dices = int(number_of_dices)
                 return True
@@ -37,7 +80,7 @@ class Game:
 
     def set_players_count(self):
         while True:
-            number_of_players = input('Arrr, how many scallywags be joinin\' this here game o\' dice, matey? (2 - 6): ')
+            number_of_players = input("Arrr, how many scallywags be joinin' this here game o' dice, matey? (2 - 6): ")
             try:
                 if int(number_of_players) not in range(2, 7):
                     raise ValueError
@@ -47,7 +90,7 @@ class Game:
                 print("Ye best set the right number o' players, or ye’ll be walkin’ the plank!")
 
     def initialize(self):
-        # Ask to play regular or wild version
+        # ask to play regular or wild version
         while True:
             user_input = input("Arrr! Do ye want to play regular or wild, matey? (R/W): ")
             if user_input.lower().strip() == 'r':
@@ -59,7 +102,7 @@ class Game:
             else:
                 print("Arrr, make a proper choice, ye scallywag, or ye'll be feedin' the sharks!")
 
-        # Initialize the game parameters - player and count of dice per player
+        # initialize the game parameters - player and count of dice per player
         if self.set_players_count() and self.set_dice_count():
             # generate players
             self.generate_players()
@@ -79,15 +122,11 @@ class Game:
         self.players = deque(players)
 
     def generate_computer_player(self):
-        comp_players = self.initial_players_count - 1
+        comp_players_needed = self.initial_players_count - 1
         players = set()
-        while True:
-            if len(players) == comp_players:
-                break
+        while len(players) < comp_players_needed:
             players.add(random.choice(self.available_computer_players_names))
-        return [ComputerPlayer(
-            name=comp,
-            number_of_dices=self.dices) for comp in players]
+        return [ComputerPlayer(name=comp, number_of_dices=self.dices) for comp in players]
 
     def end_turn(self, bid, current_player, challenged_player):
         # reveal all dices
