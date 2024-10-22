@@ -60,9 +60,9 @@ This project is licensed under the MIT License. Feel free to use, modify, and di
 ## Developer Info
 Developed by Stan Dobrev.
 
-Contact Info
-GitHub: https://github.com/StanDobrev11/
-email: dobrev81@gmail.com
+### Contact Info
+- GitHub: https://github.com/StanDobrev11/
+- email: dobrev81@gmail.com
 
 ## Contribution Guidelines
 Feel free to fork this repository and make pull requests to improve the game. Contributions are always welcome, whether it’s for bug fixes, new features, or improvements in gameplay.
