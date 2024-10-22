@@ -8,8 +8,9 @@ from attrs import Cup, Dice, Bid
 
 class BasePlayer(ABC):
     total_dices = None
+    is_wild = False
 
-    def __init__(self, name, number_of_dices, total_dices):
+    def __init__(self, name, number_of_dices):
         self.cup = Cup(number_of_dices).roll()
         self.name = name
         self.is_playing = True
@@ -79,15 +80,15 @@ class HumanPlayer(BasePlayer):
 
 class ComputerPlayer(BasePlayer):
     gambler = {
-        'Random': 0.5,
-        'Lucky': 0.45,
-        'Gambler': 0.6,
-        'SteadyHand': 0.4,
-        'TheStableGuy': 0.3
+        "Cap'n Scattershot": 0.5,
+        "One-Eyed Fortune": 0.45,
+        "Blackjack Blackbeard": 0.6,
+        "Ironhook Steady": 0.4,
+        "Barnacle Bill the Unshaken": 0.3,
     }
 
-    def __init__(self, name, number_of_dices, total_dices):
-        super().__init__(name, number_of_dices, total_dices)
+    def __init__(self, name, number_of_dices):
+        super().__init__(name, number_of_dices)
         self.gambler_threshold = self.gambler[name]
         self.is_computer = True
 
@@ -151,7 +152,7 @@ class ComputerPlayer(BasePlayer):
         result_probabilities = []
         for com in combinations:
             quantity, face = com
-            result = self.calculate_bid_proba(quantity, face, sim=1000)
+            result = self.calculate_bid_proba(quantity, face, 1000)
             result_probabilities.append((result, com))
         return result_probabilities
 
@@ -171,6 +172,9 @@ class ComputerPlayer(BasePlayer):
 
         # extract the number of faces in the current player's cup
         face_in_cup = self.cup.hand.count(face)
+        # add ones to calculate proba
+        if self.is_wild and face != 1:
+            face_in_cup += self.cup.hand.count(1)
 
         # generate the number of dices bss the current face in player's cup
         all_dice = self.total_dices - face_in_cup
@@ -184,7 +188,12 @@ class ComputerPlayer(BasePlayer):
             if face_in_cup > 0:
                 all_dice_rolled.extend([face] * face_in_cup)
 
+            # get the counter of the face count
             counter = Bid(all_dice).dice_counter(all_dice_rolled)
+
+            # account for the wild version
+            if self.is_wild and face != 1:
+                counter[face] += counter[1]
 
             # compare bid to proba
             if counter[face] >= quantity:

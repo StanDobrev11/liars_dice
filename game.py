@@ -3,21 +3,30 @@ import time
 from collections import deque
 
 from attrs import Bid
-from players import ComputerPlayer, HumanPlayer
+from players import ComputerPlayer, HumanPlayer, BasePlayer
 
 
 class Game:
-    available_computer_players_names = ['Random', 'Lucky', 'Gambler', 'SteadyHand', 'TheStableGuy']
+
     turn = 0
+    available_computer_players_names = [
+        "Cap'n Scattershot",
+        "One-Eyed Fortune",
+        "Blackjack Blackbeard",
+        "Ironhook Steady",
+        "Barnacle Bill the Unshaken",
+    ]
 
     def __init__(self):
         self.initial_players_count = None
         self.dices = None
         self.players = None
+        self.is_wild = False
 
     def set_dice_count(self):
         while True:
-            number_of_dices = input("How many bones be ye rattlin’, ye swashbuckler? Choose yer dice and let’s get rollin'! (2 - 5): ")
+            number_of_dices = input(
+                "How many bones be ye rattlin’, ye swashbuckler? Choose yer dice and let’s get rollin'! (2 - 5): ")
             try:
                 if int(number_of_dices) not in range(2, 7):
                     raise ValueError
@@ -38,6 +47,18 @@ class Game:
                 print("Ye best set the right number o' players, or ye’ll be walkin’ the plank!")
 
     def initialize(self):
+        # Ask to play regular or wild version
+        while True:
+            user_input = input("Arrr! Do ye want to play regular or wild, matey? (R/W): ")
+            if user_input.lower().strip() == 'r':
+                break
+            elif user_input.lower().strip() == 'w':
+                self.is_wild = True
+                BasePlayer.is_wild = True
+                break
+            else:
+                print("Arrr, make a proper choice, ye scallywag, or ye'll be feedin' the sharks!")
+
         # Initialize the game parameters - player and count of dice per player
         if self.set_players_count() and self.set_dice_count():
             # generate players
@@ -49,8 +70,7 @@ class Game:
         human_player_name = input("Arrr, tell us yer name, ye salty sea dog: ")
 
         human_player = HumanPlayer(name=human_player_name,
-                                   number_of_dices=self.dices,
-                                   total_dices=self.dices * self.initial_players_count)
+                                   number_of_dices=self.dices)
 
         players = [human_player]
 
@@ -67,8 +87,7 @@ class Game:
             players.add(random.choice(self.available_computer_players_names))
         return [ComputerPlayer(
             name=comp,
-            number_of_dices=self.dices,
-            total_dices=self.dices * self.initial_players_count) for comp in players]
+            number_of_dices=self.dices) for comp in players]
 
     def end_turn(self, bid, current_player, challenged_player):
         # reveal all dices
@@ -78,10 +97,15 @@ class Game:
             all_dice += player.cup.hand
         print()
         time.sleep(1)
-        # check bit validity
-        counter = bid.dice_counter(all_dice)
+
         quantity = bid.current_bid['count']
         face = bid.current_bid['face']
+
+        counter = bid.dice_counter(all_dice)
+        # account for the wild version to produce correct count of the dices
+        if self.is_wild and face != 1:
+            counter[face] += counter[1]
+
         if counter[face] >= quantity:
             challenged_player.win()
             current_player.loose(bid)
@@ -114,7 +138,9 @@ class Game:
             bid = Bid(self.dices * self.initial_players_count)
             while True:
                 current_player = self.players[0]
+                # set total dices for each player
                 current_player.total_dices = bid.total_dices
+
                 # check if is playing and if not -> pop out
                 if not current_player.is_playing:
                     self.players.popleft()
@@ -122,7 +148,8 @@ class Game:
 
                 # check for winner
                 if len(self.players) == 1:
-                    print(f"Hoist the colors! The winner be ---{current_player.name}---, the mightiest pirate o' them all!")
+                    print(
+                        f"Hoist the colors! The winner be ---{current_player.name}---, the mightiest pirate o' them all!")
                     user_input = input("Fancy another round, matey? (y/n): ")
                     if user_input.lower() == 'y':
                         self.play()
