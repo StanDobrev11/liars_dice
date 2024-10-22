@@ -22,7 +22,7 @@ class BasePlayer(ABC):
         result = bid.place_bid(count, face, self)
 
         if result:
-            return f"{self.name} placed a bid.\n"
+            return f"{self.name} placed a bid. Brave, but let’s see if fortune favors ye!"
 
         return False
 
@@ -41,13 +41,13 @@ class BasePlayer(ABC):
     def win(self):
         # increase dice count
         self.cup.add_dice()
-        print(f'{self.name} wins the round!')
+        print(f"Arrr, {self.name} won this round, ye lucky sea rat! Fortune be smilin' on ye today!")
 
     def loose(self):
         result = self.cup.remove_dice()
-        print(f"{self.name} looses this round...")
+        print(f"{self.name} lost this one, ye scurvy dog! Better luck next time, or ye’ll be walkin' the plank!")
         if not result:
-            print(f'{self.name} is out of the game')
+            print(f"Arrr, {self.name} be out o' the game! The sea's a harsh mistress!")
             self.is_playing = False
 
     def __str__(self):
@@ -59,23 +59,22 @@ class HumanPlayer(BasePlayer):
     def decide(self, bid):
         while True:
             choice = input(
-                f'Please make a choice.\nYour hand is: {self.cup.hand}\nPlace a bet(1) or call them a LIAR(2): ')
+                f"Make yer choice, ye salty sea dog! Yer hand be: {self.cup.hand}\nWill ye place a bet (1) or call ‘em a liar (2)? What’ll it be? ")
             if choice == '1':
-                quantity = input('Enter face quantity: ')
-                face = input('Enter face value: ')
+                quantity = input('How many o’ yer dice show the same face? Enter the quantity, ye sea dog: ')
+                face = input('What be the value o’ the face ye be biddin\' on? Speak up, ye bilge rat: ')
                 result = self.place_bid(bid, count=int(quantity), face=int(face))
                 if result:
                     return result
 
             elif choice == '2':
                 if not bid.current_bid:
-                    print('There is no one to call a LIAR yet! Place a bid!')
+                    print("Arrr, there be no one to call a liar just yet! Ye best place yer bid, ye scallywag!")
                     continue
                 return self.challenge()
 
 
 class ComputerPlayer(BasePlayer):
-
     gambler = {
         'Random': 0.5,
         'Lucky': 0.45,
@@ -102,7 +101,6 @@ class ComputerPlayer(BasePlayer):
         same_face = [bid_face]
         larger_quantities = [x for x in range(bid_quantity + 1, bid.total_dices + 1)]
         combinations += list(itertools.product(larger_quantities, same_face))
-
 
         return combinations
 

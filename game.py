@@ -17,25 +17,25 @@ class Game:
 
     def set_dice_count(self):
         while True:
-            number_of_dices = input('Enter the number of dices per player (2 - 5): ')
+            number_of_dices = input("How many bones be ye rattlin’, ye swashbuckler? Choose yer dice and let’s get rollin'! (2 - 5): ")
             try:
                 if int(number_of_dices) not in range(2, 7):
                     raise ValueError
                 self.dices = int(number_of_dices)
                 return True
             except ValueError:
-                print('Please set correctly the number of dices')
+                print("Arrr, set the number o' dice properly, or ye'll be swabbin' the decks!")
 
     def set_players_count(self):
         while True:
-            number_of_players = input('Enter the number of players (2 - 6): ')
+            number_of_players = input('Arrr, how many scallywags be joinin\' this here game o\' dice, matey? (2 - 6): ')
             try:
                 if int(number_of_players) not in range(2, 7):
                     raise ValueError
                 self.initial_players_count = int(number_of_players)
                 return True
             except ValueError:
-                print('Please set correctly the number of players')
+                print("Ye best set the right number o' players, or ye’ll be walkin’ the plank!")
 
     def initialize(self):
         # Initialize the game parameters - player and count of dice per player
@@ -46,7 +46,7 @@ class Game:
 
     def generate_players(self):
         """adds all players to the game"""
-        human_player_name = input('Enter your name: ')
+        human_player_name = input("Arrr, tell us yer name, ye salty sea dog: ")
 
         human_player = HumanPlayer(name=human_player_name,
                                    number_of_dices=self.dices,
@@ -74,7 +74,7 @@ class Game:
         # reveal all dices
         all_dice = []
         for player in self.players:
-            print(f"{player.name} has {player.cup.hand}")
+            print(f"Arrr, {player.name} be holdin' {player.cup.hand} in their hand!")
             all_dice += player.cup.hand
         print()
         time.sleep(1)
@@ -93,7 +93,7 @@ class Game:
         time.sleep(1)
         # print how many dices players have
         for player in self.players:
-            print(f'{player.name} has {player.cup.number_of_dices} dice(s).')
+            print(f"Avast! {player.name} be havin' {player.cup.number_of_dices} dice(s) in their cup!")
         print()
 
         # reset the bid
@@ -109,7 +109,7 @@ class Game:
         time.sleep(2)
 
     def play(self):
-        print('Welcome to Liar\'s Dice. Let\'s play a game')
+        print("Welcome aboard to Liar's Dice! Let’s be havin’ ourselves a game, ye scurvy lot!")
         if self.initialize():
             bid = Bid(self.dices * self.initial_players_count)
             while True:
@@ -121,8 +121,8 @@ class Game:
 
                 # check for winner
                 if len(self.players) == 1:
-                    print(f'The Winner is ---{current_player.name}---')
-                    user_input = input('Another game? (y/n): ')
+                    print(f"Hoist the colors! The winner be ---{current_player.name}---, the mightiest pirate o' them all!")
+                    user_input = input("Fancy another round, matey? (y/n): ")
                     if user_input.lower() == 'y':
                         self.play()
                     else:
