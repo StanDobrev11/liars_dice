@@ -1,3 +1,4 @@
+import itertools
 import random
 import math
 from collections import deque
@@ -64,10 +65,12 @@ class Bid:
             self.last_bid = self.current_bid
 
         try:
+            isinstance(all([count, face]), int)
+
             if count >= self.total_dices or count <= 0:
                 raise ValueError('Count cannot be zero or negative or bigger that the total number of dices.')
 
-            if face not in range(1, 7):
+            if int(face) not in range(1, 7):
                 raise ValueError("Face must be between 1 and 6.")
 
             if count <= self.last_bid['count'] and face <= self.last_bid['face']:
@@ -123,27 +126,50 @@ class ComputerPlayer:
 
     def generate_combinations(self, bid):
         # extract the current bid values
-        bid_quantity, bid_face = self.extract_quantity_face([bid])
+        bid_quantity, bid_face = self.extract_quantity_face(bid)
 
-        # increase the face, increase the quantity
-        for
+        faces = [x for x in range(bid_face, 7)]
+        quantities = [x for x in range(bid_quantity, bid.total_dices + 1)]
+
+        combinations = list(itertools.product(quantities, faces))
+        combinations.remove((bid_quantity, bid_face))
+
+        return combinations
 
     def decide(self, bid):
         """calculate proba and make a decision"""
 
-        proba = self.calculate_bid_proba(bid)
+        quantity, face = self.extract_quantity_face(bid)
+
+        proba = self.calculate_bid_proba(quantity, face)
 
         if proba > self.gambler_threshold:
-            # TODO the bid is probable so place a bid
+            # the bid is probable so place a bid
             # generate combinations -> possible combination are face + 1, quantity + 1, face & quantity + 1
             combinations = self.generate_combinations(bid)
 
+            # implement selection of combinations
+            combinations = combinations[:9]
+
             # calculate probabs
+            result_proba = self.generate_probabilities(combinations)
+
             # select calculation
-            pass
+            quantity, face = sorted(result_proba, key=lambda x: x[0], reverse=True)[0][1]
+
+            return self.place_bid(bid, quantity, face)
+
         else:
             # TODO challenge the player if bid not probable
             self.challenge()
+
+    def generate_probabilities(self, combinations):
+        result_probabilities = []
+        for com in combinations:
+            quantity, face = com
+            result = self.calculate_bid_proba(quantity, face, sim=1000)
+            result_probabilities.append((result, com))
+        return result_probabilities
 
     def challenge(self):
         # TODO reveal all players' hands
@@ -163,9 +189,7 @@ class ComputerPlayer:
 
         return quantity, face
 
-    def calculate_bid_proba(self, *args, sim=10000):
-
-        quantity, face = self.extract_quantity_face(*args)
+    def calculate_bid_proba(self, quantity, face, sim=10000):
 
         # extract the number of faces in the current player's cup
         face_in_cup = self.cup.hand.count(face)
@@ -258,6 +282,7 @@ if __name__ == '__main__':
     total_dices = 15
     current_bid = Bid(total_dices)
     player = ComputerPlayer('Ivo', 5, total_dices)
-    player.place_bid(current_bid, 4, 4)
+    player.place_bid(current_bid, 2, 3)
     print(player.cup)
-    print(player.calculate_bid_proba(current_bid))
+    print(player.decide(current_bid))
+    a = 5
