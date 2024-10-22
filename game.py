@@ -2,7 +2,8 @@ import random
 import time
 from collections import deque
 
-from players import ComputerPlayer
+from attrs import Bid
+from players import ComputerPlayer, HumanPlayer
 
 
 class Game:
@@ -12,7 +13,7 @@ class Game:
     def __init__(self):
         self.initial_players_count = None
         self.dices = None
-        self.players = []
+        self.players = None
 
     def set_dice_count(self):
         while True:
@@ -41,16 +42,21 @@ class Game:
         if self.set_players_count() and self.set_dice_count():
             # generate players
             self.generate_players()
+            return True
 
     def generate_players(self):
         """adds all players to the game"""
         human_player_name = input('Enter your name: ')
-        # TODO class human player
-        players = [human_player_name]
+
+        human_player = HumanPlayer(name=human_player_name,
+                                   number_of_dices=self.dices,
+                                   total_dices=self.dices * self.initial_players_count)
+
+        players = [human_player]
 
         players = players + self.generate_computer_player()
 
-        self.players = players.copy()
+        self.players = deque(players)
 
     def generate_computer_player(self):
         comp_players = self.initial_players_count - 1
@@ -64,10 +70,61 @@ class Game:
             number_of_dices=self.dices,
             total_dices=self.dices * self.initial_players_count) for comp in players]
 
+    def end_turn(self, bid, current_player, challenged_player):
+        # TODO reveal all dice
+        all_dice = []
+        for player in self.players:
+            print(f"{player.name} has {player.cup.hand}")
+            all_dice += player.cup.hand
+        print()
+        time.sleep(1)
+        # check bit validity
+        counter = bid.dice_counter(all_dice)
+        quantity = bid.current_bid['count']
+        face = bid.current_bid['face']
+        if counter[face] >= quantity:
+            challenged_player.win()
+            current_player.loose()
+        else:
+            challenged_player.loose()
+            current_player.win()
+            self.players.rotate()
+        print()
+        time.sleep(1)
+        # print how many dices players have
+        for player in self.players:
+            print(f'{player.name} has {player.cup.number_of_dices} dice(s).')
+        print()
+
+        # reset the bid
+        bid.current_bid = None
+        bid.last_bid = None
+
+        # roll all dice
+        for player in self.players:
+            player.cup.roll()
+
+        # increase the count of the turns
+        self.turn += 1
+        time.sleep(2)
+
     def play(self):
         print('Welcome to Liar\'s Dice. Let\'s play a game')
-        # time.sleep(1)
-        self.initialize()
+        if self.initialize():
+            bid = Bid(self.dices * self.initial_players_count)
+            while True:
+                current_player = self.players[0]
+                # check if is playing and if not -> pop out
+                if not current_player.is_playing:
+                    self.players.popleft()
+                    current_player = self.players[0]
+
+                result = current_player.take_turn(bid)
+                if result:
+                    challenged_player = self.players[-1]
+                    self.end_turn(bid, current_player, challenged_player)
+                    continue
+                self.players.rotate(-1)
 
 
 if __name__ == '__main__':

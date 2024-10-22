@@ -28,16 +28,15 @@ class Cup:
         return self._dices
 
     def roll(self):
+        self._dices = [Dice()] * self.number_of_dices
         self._dices = [dice.roll() for dice in self._dices]
         return self
 
     def add_dice(self):
         self.number_of_dices += 1
-        self._dices.append(Dice())
 
     def remove_dice(self):
-        self.number_of_dices += 1
-        self._dices.remove(Dice())
+        self.number_of_dices -= 1
         if self.number_of_dices == 0:
             return False
         return True
@@ -64,7 +63,7 @@ class Bid:
         try:
             isinstance(all([count, face]), int)
 
-            if count >= self.total_dices or count <= 0:
+            if count > self.total_dices or count <= 0:
                 raise ValueError('Count cannot be zero or negative or bigger that the total number of dices.')
 
             if int(face) not in range(1, 7):
@@ -100,6 +99,12 @@ class Bid:
             self.current_bid['count'] = count
             self.current_bid['face'] = face
             self.current_player = player
+            return True
+
+        return False
 
     def __str__(self):
-        return f"The current bid is:\n Count: {self.current_bid['count']}\n Face: {self.current_bid['face']}'s"
+        if self.current_bid:
+            return f"The current bid is:\n Count: {self.current_bid['count']}\n Face: {self.current_bid['face']}'s"
+        else:
+            return f"There is no placed bid yet!"

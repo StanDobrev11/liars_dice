@@ -1,28 +1,84 @@
 import itertools
+import random
+import time
+from abc import ABC, abstractmethod
 
 from attrs import Cup, Dice, Bid
 
 
-class BasePlayer:
+class BasePlayer(ABC):
     def __init__(self, name, number_of_dices, total_dices):
         self.cup = Cup(number_of_dices).roll()
         self.name = name
         self.total_dices = total_dices
         self.is_playing = True
+        self.is_computer = False
+
+    @abstractmethod
+    def decide(self, bid):
+        pass
+
+    def place_bid(self, bid, count, face):
+        result = bid.place_bid(count, face, self)
+
+        if result:
+            return f"{self.name} placed a bid.\n"
+
+        return False
+
+    @staticmethod
+    def challenge():
+        return 'Liar!'
+
+    def take_turn(self, bid):
+        print(f"{bid}\n")
+        result = self.decide(bid)
+        print(result)
+        if result == 'Liar!':
+            return True
+        time.sleep(1)
+
+    def win(self):
+        # increase dice count
+        self.cup.add_dice()
+        print(f'{self.name} wins the round!')
+
+    def loose(self):
+        result = self.cup.remove_dice()
+        print(f"{self.name} looses this round...")
+        if not result:
+            print(f'{self.name} is out of the game')
+            self.is_playing = False
+
+    def __str__(self):
+        return self.name
+
+
+class HumanPlayer(BasePlayer):
+
+    def decide(self, bid):
+        while True:
+            choice = input(
+                f'Please make a choice.\nYour hand is: {self.cup.hand}\nPlace a bet(1) or call them a LIAR(2): ')
+            if choice == '1':
+                quantity = input('Enter face quantity: ')
+                face = input('Enter face value: ')
+                result = self.place_bid(bid, count=int(quantity), face=int(face))
+                if result:
+                    return result
+
+            elif choice == '2':
+                if not bid.current_bid:
+                    print('There is no one to call a LIAR yet! Place a bid!')
+                    continue
+                return self.challenge()
 
 
 class ComputerPlayer(BasePlayer):
     def __init__(self, name, number_of_dices, total_dices):
         super().__init__(name, number_of_dices, total_dices)
         self.gambler_threshold = 0.3
-
-    def place_bid(self, bid, count, face):
-        result = bid.place_bid(count, face, self)
-
-        if result:
-            return result, False
-
-        return f"{self.name} placed a bid.\n{bid}", True
+        self.is_computer = True
 
     def generate_combinations(self, bid):
         # extract the current bid values
@@ -36,8 +92,19 @@ class ComputerPlayer(BasePlayer):
 
         return combinations
 
+    def new_bid_count_and_face(self):
+        """ calculates the new bid count and face """
+        quantity = random.randint(1, 3)
+        face = random.randint(1, 3)
+
+        return quantity, face
+
     def decide(self, bid):
         """calculate proba and make a decision"""
+
+        if not bid.current_bid:
+            quantity, face = self.new_bid_count_and_face()
+            return self.place_bid(bid, quantity, face)
 
         quantity, face = self.extract_quantity_face(bid)
 
@@ -60,8 +127,7 @@ class ComputerPlayer(BasePlayer):
             return self.place_bid(bid, quantity, face)
 
         else:
-            # TODO challenge the player if bid not probable
-            self.challenge()
+            return self.challenge()
 
     def generate_probabilities(self, combinations):
         result_probabilities = []
@@ -70,13 +136,6 @@ class ComputerPlayer(BasePlayer):
             result = self.calculate_bid_proba(quantity, face, sim=1000)
             result_probabilities.append((result, com))
         return result_probabilities
-
-    def challenge(self):
-        # TODO end turn
-        # TODO reveal all players' hands
-        # TODO calculate if the bid is matched
-        # TODO decide the outcome
-        pass
 
     @staticmethod
     def extract_quantity_face(*args):
@@ -115,5 +174,8 @@ class ComputerPlayer(BasePlayer):
 
         return valid_bid_count / sim
 
-    def __str__(self):
-        return self.name
+
+if __name__ == '__main__':
+    player = HumanPlayer('Stan', 5, 15)
+    bid = Bid(15)
+    player.decide(bid)
