@@ -110,7 +110,16 @@ class ComputerPlayer(BasePlayer):
 
     def new_bid_count_and_face(self):
         """ calculates the new bid count and face """
-        quantity = random.randint(1, 3)
+        # setting face counts
+        end_range = 3
+        if self.cup.number_of_dices <= end_range:
+            end_range = self.cup.number_of_dices - 1
+            if end_range <= 0:
+                end_range = 1
+
+        quantity = random.randint(1, end_range)
+
+        # to start lower
         face = random.randint(1, 3)
 
         return quantity, face
