@@ -32,9 +32,6 @@ class Cup:
         self._dices = [dice.roll() for dice in self._dices]
         return self
 
-    def add_dice(self):
-        self.number_of_dices += 1
-
     def remove_dice(self):
         self.number_of_dices -= 1
         if self.number_of_dices == 0:
@@ -64,20 +61,20 @@ class Bid:
             isinstance(all([count, face]), int)
 
             if count > self.total_dices or count <= 0:
-                raise ValueError('Count cannot be zero or negative or bigger that the total number of dices.')
+                raise ValueError("Arrr! The count can't be zero, negative, or greater than the total number o' dice in play, ye scallywag!")
 
             if int(face) not in range(1, 7):
-                raise ValueError("Face must be between 1 and 6.")
+                raise ValueError("Ye face value must be between 1 and 6, matey! No foolin' around with improper faces!")
 
             # The player can bid a higher count of the same face or any count of a higher face
             if face < self.last_bid['face']:
                 # If the face is lower
-                raise ValueError('Please place a proper bid.')
+                raise ValueError("Ye need to place a proper bid, or ye’ll be feedin’ the fish!")
 
             elif face == self.last_bid['face']:
                 # The count is higher than last
                 if count <= self.last_bid['count']:
-                    raise ValueError('Please place a proper bid.')
+                    raise ValueError("Ye need to place a proper bid, or ye’ll be feedin’ the fish!")
 
         except ValueError as v:
             print(v)
@@ -112,6 +109,6 @@ class Bid:
 
     def __str__(self):
         if self.current_bid:
-            return f"The current bid is:\n Count: {self.current_bid['count']}\n Face: {self.current_bid['face']}'s"
+            return f"\nHere be the current bid, ye landlubber:\n Count: {self.current_bid['count']}\n Face: {self.current_bid['face']}'s"
         else:
-            return f"There is no placed bid yet!"
+            return "\nArrr, there be no bid placed yet, matey! Make yer move!"

@@ -84,9 +84,9 @@ class Game:
         face = bid.current_bid['face']
         if counter[face] >= quantity:
             challenged_player.win()
-            current_player.loose()
+            current_player.loose(bid)
         else:
-            challenged_player.loose()
+            challenged_player.loose(bid)
             current_player.win()
             self.players.rotate()
         print()
@@ -114,6 +114,7 @@ class Game:
             bid = Bid(self.dices * self.initial_players_count)
             while True:
                 current_player = self.players[0]
+                current_player.total_dices = bid.total_dices
                 # check if is playing and if not -> pop out
                 if not current_player.is_playing:
                     self.players.popleft()

@@ -7,12 +7,12 @@ from attrs import Cup, Dice, Bid
 
 
 class BasePlayer(ABC):
+    total_dices = None
+
     def __init__(self, name, number_of_dices, total_dices):
         self.cup = Cup(number_of_dices).roll()
         self.name = name
-        self.total_dices = total_dices
         self.is_playing = True
-        self.is_computer = False
 
     @abstractmethod
     def decide(self, bid):
@@ -39,12 +39,11 @@ class BasePlayer(ABC):
         time.sleep(1)
 
     def win(self):
-        # increase dice count
-        self.cup.add_dice()
         print(f"Arrr, {self.name} won this round, ye lucky sea rat! Fortune be smilin' on ye today!")
 
-    def loose(self):
+    def loose(self, bid):
         result = self.cup.remove_dice()
+        bid.total_dices -= 1
         print(f"{self.name} lost this one, ye scurvy dog! Better luck next time, or ye’ll be walkin' the plank!")
         if not result:
             print(f"Arrr, {self.name} be out o' the game! The sea's a harsh mistress!")
@@ -63,7 +62,11 @@ class HumanPlayer(BasePlayer):
             if choice == '1':
                 quantity = input('How many o’ yer dice show the same face? Enter the quantity, ye sea dog: ')
                 face = input('What be the value o’ the face ye be biddin\' on? Speak up, ye bilge rat: ')
-                result = self.place_bid(bid, count=int(quantity), face=int(face))
+                try:
+                    result = self.place_bid(bid, count=int(quantity), face=int(face))
+                except ValueError:
+                    print("Ye need to place a proper bid, or ye’ll be feedin’ the fish!")
+                    continue
                 if result:
                     return result
 
